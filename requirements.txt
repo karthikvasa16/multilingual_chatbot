@@ -1,6 +1,6 @@
-streamlit
-google-generativeai
-transformers
-torch
+streamlit>=1.20.0
+transformers>=4.39.0
 torchaudio
-sounddevice
+torch
+numpy
+soundfile
