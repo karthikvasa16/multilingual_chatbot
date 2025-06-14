@@ -1,7 +1,6 @@
 import torch
 import torchaudio
 from transformers import AutoProcessor, AutoModelForCTC
-import IPython.display as ipd
 import os
 from pathlib import Path
 
@@ -20,8 +19,7 @@ if sample_rate != 16000:
     waveform = resampler(waveform)
     sample_rate = 16000
 
-# 📌 Play audio
-ipd.display(ipd.Audio(waveform.numpy(), rate=sample_rate))
+
 
 # 📌 Inference
 input_values = processor(waveform.squeeze(), sampling_rate=sample_rate, return_tensors="pt").input_values
