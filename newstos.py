@@ -1,35 +1,49 @@
+import streamlit as st
 import torch
 import torchaudio
 from transformers import AutoProcessor, AutoModelForCTC
-import os
-from pathlib import Path
+from tempfile import NamedTemporaryFile
 
-# 📌 Load the model and processor
-processor = AutoProcessor.from_pretrained("facebook/wav2vec2-base-960h")
-model = AutoModelForCTC.from_pretrained("facebook/wav2vec2-base-960h")
+# Set title
+st.title("🎤 Speech to Text Transcriber (Wav2Vec2)")
 
-# 📌 Upload audio file (must be 16kHz, mono WAV file)
-uploaded_file = st.file_uploader("Upload an audio file (.wav, .mp3, .flac)", type=["wav", "mp3", "flac"])
+# Load model and processor
+@st.cache_resource
+def load_model():
+    processor = AutoProcessor.from_pretrained("facebook/wav2vec2-base-960h")
+    model = AutoModelForCTC.from_pretrained("facebook/wav2vec2-base-960h")
+    return processor, model
 
-waveform, sample_rate = torchaudio.load(uploaded_file)
+processor, model = load_model()
 
-# 📌 Resample to 16000 Hz if needed
-if sample_rate != 16000:
-    resampler = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=16000)
-    waveform = resampler(waveform)
-    sample_rate = 16000
+# Upload file
+uploaded_file = st.file_uploader("Upload a WAV audio file (16kHz mono)", type=["wav"])
 
+if uploaded_file:
+    with NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+        tmp.write(uploaded_file.read())
+        tmp_path = tmp.name
 
+    # Load audio
+    waveform, sample_rate = torchaudio.load(tmp_path)
 
-# 📌 Inference
-input_values = processor(waveform.squeeze(), sampling_rate=sample_rate, return_tensors="pt").input_values
-with torch.no_grad():
-    logits = model(input_values).logits
+    # Resample if needed
+    if sample_rate != 16000:
+        resampler = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=16000)
+        waveform = resampler(waveform)
 
-# 📌 Decode prediction
-predicted_ids = torch.argmax(logits, dim=-1)
-transcription = processor.batch_decode(predicted_ids)[0]
+    # Display audio player
+    st.audio(tmp_path)
 
-# 📌 Display result
-print("📝 Transcribed Text:")
-print(transcription)
+    # Prepare input
+    inputs = processor(waveform.squeeze(), sampling_rate=16000, return_tensors="pt")
+    with torch.no_grad():
+        logits = model(**inputs).logits
+
+    # Decode
+    predicted_ids = torch.argmax(logits, dim=-1)
+    transcription = processor.batch_decode(predicted_ids)[0]
+
+    # Display result
+    st.markdown("### 📝 Transcription Result:")
+    st.success(transcription)
