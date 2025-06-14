@@ -30,7 +30,7 @@ def t(text):
     return translator.translate(text, dest=lang_code).text
 
 # App Title
-st.title(t("💬 Gemini 1.5 Multilingual Chatbot"))
+st.title("💬 Gemini 1.5 Multilingual Chatbot")
 
 # Show message history
 for msg in st.session_state.messages:
