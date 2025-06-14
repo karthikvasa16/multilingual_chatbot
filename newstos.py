@@ -10,12 +10,9 @@ processor = AutoProcessor.from_pretrained("facebook/wav2vec2-base-960h")
 model = AutoModelForCTC.from_pretrained("facebook/wav2vec2-base-960h")
 
 # 📌 Upload audio file (must be 16kHz, mono WAV file)
-from google.colab import files  # for colab. For kaggle, use Input tab to upload files manually
-uploaded = files.upload()
+uploaded_file = st.file_uploader("Upload an audio file (.wav, .mp3, .flac)", type=["wav", "mp3", "flac"])
 
-# 📌 Load the audio
-filename = list(uploaded.keys())[0]
-waveform, sample_rate = torchaudio.load(filename)
+waveform, sample_rate = torchaudio.load(uploaded_file)
 
 # 📌 Resample to 16000 Hz if needed
 if sample_rate != 16000:
