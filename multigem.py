@@ -7,7 +7,9 @@ from googletrans import Translator, LANGUAGES
 import google.generativeai as genai
 
 # === CONFIGURATION ===
-genai.configure(api_key="AIzaSyDexffYjmTQRUfLPtfkd65yrCXRgYr0S9c")
+st.sidebar.header("🔐 Gemini API Key")
+api_key = st.sidebar.text_input("Paste your Gemini API Key:", type="password")
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-1.5-flash")
 translator = Translator()
 
